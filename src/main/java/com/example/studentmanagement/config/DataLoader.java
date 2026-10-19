@@ -4,14 +4,11 @@ import com.example.studentmanagement.model.Attendance;
 import com.example.studentmanagement.model.Student;
 import com.example.studentmanagement.repository.AttendanceRepository;
 import com.example.studentmanagement.repository.StudentRepository;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,142 +24,122 @@ public class DataLoader {
         return args -> {
 
             // --------------------------------------------------
-            // 1. Create students only if they do not exist
+            // 1. Clear old sample data
             // --------------------------------------------------
-            Map<String, Student> studentMap = new HashMap<>();
 
-            List<Student> existingStudents = students.findAll();
+            attendance.deleteAll();
+            students.deleteAll();
 
-            for (Student student : existingStudents) {
-                studentMap.put(student.getRollNo(), student);
-            }
+            // --------------------------------------------------
+            // 2. Create students
+            // --------------------------------------------------
 
-            String[][] studentData = {
-                    { "101", "Nihar Vategavkar", "nihar@example.com", "SE-Comp-C" },
-                    { "102", "Soham Wadekar", "soham@example.com", "SE-Comp-C" },
-                    { "103", "Sakshi Bendke", "sakshi@example.com", "SE-Comp-C" },
-                    { "104", "Sahara Patil", "aditya@example.com", "SE-Comp-C" },
-                    { "105", "Neha Deshmukh", "neha@example.com", "SE-Comp-C" },
-                    { "106", "Riya Sharma", "riya.sharma@example.com", "SE-Comp-C" }
+            List<Student> savedStudents = students.saveAll(List.of(
+
+                    new Student(
+                            "101",
+                            "Nihar Vategavkar",
+                            "nihar@example.com",
+                            "SE-Comp-C"),
+
+                    new Student(
+                            "102",
+                            "Soham Wadekar",
+                            "soham@example.com",
+                            "SE-Comp-C"),
+
+                    new Student(
+                            "103",
+                            "Sakshi Bendke",
+                            "sakshi@example.com",
+                            "SE-Comp-C"),
+
+                    new Student(
+                            "104",
+                            "Sahara Patil",
+                            "aditya@example.com",
+                            "SE-Comp-C"),
+
+                    new Student(
+                            "105",
+                            "Neha Deshmukh",
+                            "neha@example.com",
+                            "SE-Comp-C"),
+
+                    new Student(
+                            "106",
+                            "Riya Sharma",
+                            "riya.sharma@example.com",
+                            "SE-Comp-C")));
+
+            // --------------------------------------------------
+            // 3. Attendance configuration
+            // --------------------------------------------------
+
+            /*
+             * 20 Java lectures for every student.
+             *
+             * 101 -> 20/20 = 100%
+             * 102 -> 15/20 = 75%
+             * 103 -> 15/20 = 75%
+             * 104 -> 14/20 = 70%
+             * 105 -> 5/20 = 25%
+             * 106 -> 14/20 = 70%
+             */
+
+            int[] presentCount = {
+                    20,
+                    15,
+                    15,
+                    14,
+                    5,
+                    14
             };
 
-            for (String[] data : studentData) {
+            LocalDate startDate = LocalDate.of(2030, 1, 1);
 
-                Student student = studentMap.get(data[0]);
+            // --------------------------------------------------
+            // 4. Prepare all attendance records
+            // --------------------------------------------------
 
-                if (student == null) {
-                    student = students.save(
-                            new Student(
-                                    data[0],
-                                    data[1],
-                                    data[2],
-                                    data[3]));
+            List<Attendance> attendanceRecords = new ArrayList<>();
 
-                    studentMap.put(data[0], student);
+            for (int i = 0; i < savedStudents.size(); i++) {
 
-                } else if (data[0].equals("104")
-                        && !student.getName().equals("Sahara Patil")) {
+                Student student = savedStudents.get(i);
 
-                    // Change existing Roll 104 name to Sahara Patil
-                    student.setName("Sahara Patil");
-                    students.save(student);
+                for (int lecture = 1; lecture <= 20; lecture++) {
+
+                    boolean present = lecture <= presentCount[i];
+
+                    Attendance record = new Attendance(
+                            student,
+                            startDate.plusDays(lecture - 1),
+                            "Java",
+                            present);
+
+                    attendanceRecords.add(record);
                 }
             }
 
             // --------------------------------------------------
-            // 2. Desired attendance percentages
+            // 5. Save all attendance records together
             // --------------------------------------------------
-            Map<String, Integer> targetPresent = Map.of(
-                    "101", 100,
-                    "102", 75,
-                    "103", 75,
-                    "104", 72,
-                    "105", 25,
-                    "106", 70);
+
+            attendance.saveAll(attendanceRecords);
 
             // --------------------------------------------------
-            // 3. Get all existing attendance
+            // 6. Confirmation
             // --------------------------------------------------
-            List<Attendance> allAttendance = attendance.findAll();
 
-            // --------------------------------------------------
-            // 4. Create/complete Java attendance
-            // --------------------------------------------------
-            for (String rollNo : targetPresent.keySet()) {
-
-                Student student = studentMap.get(rollNo);
-
-                if (student == null) {
-                    continue;
-                }
-
-                int requiredPresent = targetPresent.get(rollNo);
-
-                List<Attendance> javaAttendance = new ArrayList<>();
-
-                for (Attendance a : allAttendance) {
-                    if (a.getStudent().getId().equals(student.getId())
-                            && "Java".equals(a.getSubject())) {
-                        javaAttendance.add(a);
-                    }
-                }
-
-                javaAttendance.sort(
-                        Comparator.comparing(Attendance::getAttendanceDate));
-
-                // --------------------------------------------------
-                // Keep existing records and modify their status
-                // --------------------------------------------------
-                int existingCount = javaAttendance.size();
-
-                for (int i = 0; i < existingCount; i++) {
-                    javaAttendance.get(i).setPresent(i < requiredPresent);
-                }
-
-                attendance.saveAll(javaAttendance);
-
-                // --------------------------------------------------
-                // Add missing lectures until total reaches 100
-                // --------------------------------------------------
-                Set<LocalDate> usedDates = new HashSet<>();
-
-                for (Attendance a : javaAttendance) {
-                    usedDates.add(a.getAttendanceDate());
-                }
-
-                int currentCount = javaAttendance.size();
-                int currentPresent = Math.min(requiredPresent, currentCount);
-
-                LocalDate date = LocalDate.of(2030, 1, 1);
-
-                List<Attendance> newAttendance = new ArrayList<>();
-
-                while (currentCount < 100) {
-
-                    if (!usedDates.contains(date)) {
-
-                        boolean present = currentPresent < requiredPresent;
-
-                        newAttendance.add(
-                                new Attendance(
-                                        student,
-                                        date,
-                                        "Java",
-                                        present));
-
-                        usedDates.add(date);
-                        currentCount++;
-
-                        if (present) {
-                            currentPresent++;
-                        }
-                    }
-
-                    date = date.plusDays(1);
-                }
-
-                attendance.saveAll(newAttendance);
-            }
+            System.out.println("--------------------------------------");
+            System.out.println("Sample attendance data loaded successfully.");
+            System.out.println("Students: " + savedStudents.size());
+            System.out.println("Java lectures per student: 20");
+            System.out.println(
+                    "Total attendance records: "
+                            + attendanceRecords.size());
+            System.out.println("--------------------------------------");
         };
     }
 }
