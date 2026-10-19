@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login – Student Attendance System</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+        .login-box {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 36px 32px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+        }
+        .login-logo { text-align: center; margin-bottom: 24px; }
+        .login-logo .icon { font-size: 48px; }
+        .login-logo h1 { margin: 8px 0 4px; font-size: 22px; }
+        .login-logo p  { margin: 0; color: var(--muted); font-size: 13px; }
+        .login-box .field { margin-bottom: 18px; }
+        .login-box .field label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+        .login-box .field input {
+            width: 100%; padding: 11px 14px;
+            border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
+        }
+        .login-box .field input:focus { outline: none; border-color: var(--primary); }
+        .login-box .btn { width: 100%; padding: 12px; font-size: 15px; margin-top: 4px; }
+        #login-error { color: var(--danger); font-size: 13px; text-align: center; min-height: 20px; margin-top: 10px; }
+        .hint-box {
+            background: #eef2ff; border-radius: 8px; padding: 10px 14px;
+            font-size: 12px; color: #374151; margin-top: 18px; text-align: center;
+        }
+        .switch-link { text-align: center; margin-top: 18px; font-size: 13px; color: var(--muted); }
+        .switch-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <div class="login-logo">
+            <div class="icon">🎓</div>
+            <h1>Student Portal</h1>
+            <p>Student Attendance Management System</p>
+        </div>
+
+        <div class="field">
+            <label for="s-rollno">Roll Number</label>
+            <input type="text" id="s-rollno" placeholder="e.g. 101" autocomplete="username">
+        </div>
+        <div class="field">
+            <label for="s-password">Password</label>
+            <input type="password" id="s-password" placeholder="Enter your password" autocomplete="current-password">
+        </div>
+
+        <button id="s-login-btn" class="btn primary">Login</button>
+        <div id="login-error"></div>
+
+        <div class="hint-box">
+            🔑 Default password = your Roll Number<br>
+            (e.g. Roll 101 → password <strong>101</strong>)
+        </div>
+
+        <div class="switch-link">
+            Admin? <a href="/login">Admin Login →</a>
+        </div>
+    </div>
+
+    <script>
+        async function doLogin() {
+            const rollNo    = document.getElementById('s-rollno').value.trim();
+            const password  = document.getElementById('s-password').value;
+            const errorEl   = document.getElementById('login-error');
+            const btn       = document.getElementById('s-login-btn');
+            errorEl.textContent = '';
+
+            if (!rollNo || !password) {
+                errorEl.textContent = 'Please enter roll number and password.';
+                return;
+            }
+            btn.disabled = true;
+            btn.textContent = 'Logging in…';
+            try {
+                const res = await fetch('/api/auth/student-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: rollNo, password })
+                });
+                const body = await res.json();
+                if (res.ok && body.success) {
+                    window.location.href = '/student-dashboard.html';
+                } else {
+                    errorEl.textContent = body.message || 'Invalid credentials.';
+                    btn.disabled = false;
+                    btn.textContent = 'Login';
+                }
+            } catch (e) {
+                errorEl.textContent = 'Network error. Please try again.';
+                btn.disabled = false;
+                btn.textContent = 'Login';
+            }
+        }
+
+        document.getElementById('s-login-btn').addEventListener('click', doLogin);
+        document.getElementById('s-password').addEventListener('keydown', e => {
+            if (e.key === 'Enter') doLogin();
+        });
+    </script>
+</body>
+</html>

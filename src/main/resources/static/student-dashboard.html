@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Attendance – Student Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Student-specific overrides */
+        .topbar { background: #1e4b9c; }
+
+        .student-badge {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .profile-avatar {
+            width: 56px; height: 56px;
+            background: #eef2ff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+        .profile-info h2 { margin: 0 0 4px; font-size: 20px; }
+        .profile-info p  { margin: 0; color: var(--muted); font-size: 13px; }
+
+        .overall-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 0;
+        }
+        .overall-stat {
+            text-align: center;
+            padding: 16px 10px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        .overall-stat .val {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text);
+            display: block;
+        }
+        .overall-stat .val.ok-color  { color: var(--ok); }
+        .overall-stat .val.low-color { color: var(--danger); }
+        .overall-stat .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+        .shortage-badge {
+            display: inline-block;
+            background: #fdeaea;
+            color: var(--danger);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .ok-badge {
+            display: inline-block;
+            background: #e6f6ec;
+            color: var(--ok);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .no-data-badge {
+            display: inline-block;
+            background: #f3f4f6;
+            color: var(--muted);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 12px;
+        }
+        #loading-msg { text-align: center; color: var(--muted); padding: 40px 0; font-size: 15px; }
+        .readonly-notice {
+            background: #eef2ff;
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="topbar-title">
+                <h1>Student Attendance Portal</h1>
+                <p>View your subject-wise attendance</p>
+            </div>
+            <div class="topbar-auth">
+                <span class="student-badge">🎓 Student</span>
+                <button id="s-logout-btn" class="btn small danger">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <main class="container">
+        <div id="loading-msg">⏳ Loading your attendance data…</div>
+
+        <div id="dashboard-content" style="display:none;" class="tab-panel">
+
+            <!-- Profile -->
+            <div class="card">
+                <div class="profile-card">
+                    <div class="profile-avatar">🎓</div>
+                    <div class="profile-info">
+                        <h2 id="s-name">—</h2>
+                        <p>Roll No: <strong id="s-roll">—</strong> &nbsp;|&nbsp; Class: <strong id="s-class">—</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overall stats -->
+            <div class="card">
+                <h2 style="margin-top:0">Overall Attendance</h2>
+                <div class="overall-grid">
+                    <div class="overall-stat">
+                        <span class="val" id="ov-pct">—</span>
+                        <div class="lbl">Overall %</div>
+                    </div>
+                    <div class="overall-stat">
+                        <span class="val" id="ov-total">—</span>
+                        <div class="lbl">Total Classes</div>
+                    </div>
+                    <div class="overall-stat">
+                        <span class="val" id="ov-present">—</span>
+                        <div class="lbl">Classes Attended</div>
+                    </div>
+                    <div class="overall-stat">
+                        <span class="val" id="ov-shortage-count">—</span>
+                        <div class="lbl">Subjects with Shortage</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject-wise table -->
+            <div class="card">
+                <h2 style="margin-top:0">Subject-wise Attendance</h2>
+                <div class="readonly-notice">📋 Read-only view — contact your admin to make changes.</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Subject</th>
+                                <th>Total Classes</th>
+                                <th>Present</th>
+                                <th>Attendance %</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subject-tbody"></tbody>
+                    </table>
+                </div>
+                <p id="no-data-msg" class="empty" hidden>No attendance records found yet.</p>
+            </div>
+
+        </div><!-- /dashboard-content -->
+    </main>
+
+    <script src="student-app.js"></script>
+</body>
+</html>

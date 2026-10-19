@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="topbar-title">
+                <h1>Student Attendance Management System</h1>
+                <p>Spring Boot + HTML, CSS, JavaScript</p>
+            </div>
+            <div class="topbar-auth">
+                <span class="admin-badge">Admin</span>
+                <button id="logout-btn" class="btn small danger">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab active" data-tab="dashboard-tab">Dashboard</button>
+        <button class="tab" data-tab="students-tab">Students</button>
+        <button class="tab" data-tab="mark-tab">Mark Attendance</button>
+        <button class="tab" data-tab="report-tab">Attendance Report</button>
+    </nav>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <main class="container">
+
+        <!-- ================= DASHBOARD ================= -->
+        <section id="dashboard-tab" class="tab-panel">
+            <div class="stats-grid">
+                <div class="card stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Students</span>
+                        <span class="stat-value" id="stat-total-students">-</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Average Attendance</span>
+                        <span class="stat-value" id="stat-avg-attendance">-</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card stat-alert">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Students with Shortage</span>
+                        <span class="stat-value text-danger" id="stat-shortage-count">-</span>
+                        <small class="stat-subtext">&lt; 75% required</small>
+                    </div>
+                </div>
+
+                <div class="card stat-card stat-success">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-info">
+                        <span class="stat-label">Highest Attendance</span>
+                        <span class="stat-value" id="stat-highest-attendance">-</span>
+                        <small class="stat-subtext" id="stat-highest-name">-</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Quick Actions</h2>
+                <div class="quick-nav-grid">
+                    <button type="button" class="quick-nav-btn" data-target="students-tab">
+                        <span class="quick-nav-icon">👤</span>
+                        <div>
+                            <strong>Students</strong>
+                            <p>View student directory, add or remove students</p>
+                        </div>
+                    </button>
+                    <button type="button" class="quick-nav-btn" data-target="mark-tab">
+                        <span class="quick-nav-icon">📝</span>
+                        <div>
+                            <strong>Attendance</strong>
+                            <p>Take or update daily attendance sheets</p>
+                        </div>
+                    </button>
+                    <button type="button" class="quick-nav-btn" data-target="report-tab">
+                        <span class="quick-nav-icon">📈</span>
+                        <div>
+                            <strong>Reports</strong>
+                            <p>View detailed statistics, shortages, and export CSV</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card" id="dashboard-shortage-card">
+                <h2>Attendance Shortage Notice (&lt; 75%)</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Roll No</th>
+                                <th>Name</th>
+                                <th>Total Classes</th>
+                                <th>Present</th>
+                                <th>Attendance %</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-shortage-body"></tbody>
+                    </table>
+                </div>
+                <p id="dashboard-no-shortage" class="empty" hidden>No students are currently below 75% attendance.</p>
+            </div>
+        </section>
+
+        <!-- ================= STUDENTS ================= -->
+        <section id="students-tab" class="tab-panel" hidden>
+            <div class="card">
+                <h2>Add Student</h2>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="rollNo">Roll No</label>
+                        <input type="text" id="rollNo" placeholder="e.g. 106">
+                        <small class="error" id="err-rollNo"></small>
+                    </div>
+                    <div class="field">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" placeholder="Full name">
+                        <small class="error" id="err-name"></small>
+                    </div>
+                    <div class="field">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="name@example.com">
+                        <small class="error" id="err-email"></small>
+                    </div>
+                    <div class="field">
+                        <label for="className">Class</label>
+                        <input type="text" id="className" placeholder="e.g. TE-Comp-A">
+                        <small class="error" id="err-className"></small>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button id="add-student-btn" class="btn primary">Add Student</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>All Students <span id="student-count" class="badge">0</span></h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Roll No</th><th>Name</th><th>Email</th><th>Class</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="student-body"></tbody>
+                    </table>
+                </div>
+                <p id="no-students" class="empty" hidden>No students yet. Add one above.</p>
+            </div>
+        </section>
+
+        <!-- ================= MARK ATTENDANCE ================= -->
+        <section id="mark-tab" class="tab-panel" hidden>
+            <div class="card">
+                <h2>Mark Attendance</h2>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="att-date">Date</label>
+                        <input type="date" id="att-date">
+                    </div>
+                    <div class="field">
+                        <label for="att-subject">Subject</label>
+                        <input type="text" id="att-subject" list="subject-list" placeholder="e.g. Java">
+                        <datalist id="subject-list"></datalist>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button id="load-sheet-btn" class="btn primary">Load Students</button>
+                </div>
+            </div>
+
+            <div id="sheet-card" class="card" hidden>
+                <div class="list-header">
+                    <h2>Attendance Sheet</h2>
+                    <div class="actions">
+                        <button id="all-present-btn" class="btn small">All Present</button>
+                        <button id="all-absent-btn" class="btn small">All Absent</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Roll No</th><th>Name</th><th>Present</th></tr>
+                        </thead>
+                        <tbody id="sheet-body"></tbody>
+                    </table>
+                </div>
+                <div class="actions">
+                    <button id="submit-att-btn" class="btn primary">Submit Attendance</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= REPORT ================= -->
+        <section id="report-tab" class="tab-panel" hidden>
+            <div class="card">
+                <h2>Attendance Report</h2>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="report-subject">Subject (leave empty for all subjects)</label>
+                        <input type="text" id="report-subject" list="subject-list" placeholder="e.g. Java">
+                    </div>
+                </div>
+                <div class="actions">
+                    <button id="report-btn" class="btn primary">Generate Report</button>
+                    <button id="csv-btn" class="btn" hidden>Download CSV</button>
+                </div>
+            </div>
+
+            <div id="report-card" class="card" hidden>
+                <p id="report-summary" class="summary"></p>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Roll No</th><th>Name</th><th>Total Classes</th>
+                                <th>Present</th><th>Attendance %</th><th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

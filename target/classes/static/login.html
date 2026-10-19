@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Student Attendance Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 380px;
+        }
+        .login-card h2 {
+            margin: 0 0 6px;
+            font-size: 22px;
+            color: var(--text);
+        }
+        .login-card .subtitle {
+            margin: 0 0 20px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .login-card .field {
+            margin-bottom: 16px;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 11px;
+            font-weight: 600;
+        }
+        .demo-hint {
+            margin-top: 18px;
+            padding: 10px 14px;
+            background: #f8fafc;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+        }
+        .demo-hint code {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .login-alert {
+            display: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            background: #fdeaea;
+            color: #a12a2a;
+            border: 1px solid #f8b4b4;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="card login-card">
+            <h2>Admin Login</h2>
+            <p class="subtitle">Student Attendance Management System</p>
+
+            <div id="login-alert" class="login-alert"></div>
+
+            <form id="login-form">
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="e.g. admin" required autofocus autocomplete="username">
+                </div>
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" id="login-submit-btn" class="btn primary login-btn">Login</button>
+            </form>
+
+            <div class="demo-hint">
+                Demo credentials: <code>admin</code> / <code>admin123</code>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById("login-form");
+        const alertBox = document.getElementById("login-alert");
+        const submitBtn = document.getElementById("login-submit-btn");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            alertBox.style.display = "none";
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Logging in...";
+
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+
+            try {
+                const response = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (response.ok && data.success) {
+                    window.location.href = "/dashboard";
+                } else {
+                    alertBox.textContent = data.message || "Invalid username or password";
+                    alertBox.style.display = "block";
+                }
+            } catch (err) {
+                alertBox.textContent = "Unable to connect to the server. Please try again.";
+                alertBox.style.display = "block";
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Login";
+            }
+        });
+    </script>
+</body>
+</html>
